@@ -1,22 +1,22 @@
 # Turkey Clinic Guide
 
-A full-stack dental directory website built with Next.js 14, PostgreSQL, and Docker.
+A full-stack dental clinic directory for Turkey: browse clinics, view details with maps, book appointments, and manage content via an admin panel.
 
 ## Features
 
 - Browse and search dental clinics in Turkey
-- Clinic detail pages with maps, reviews, and booking
-- User authentication and reviews
-- Admin panel for managing clinics and bookings
+- Clinic detail pages with maps (Google Maps), reviews, and booking
+- User authentication (register, login, JWT)
+- Clinic owner registration and dashboard
+- Admin panel for managing clinics, procedures, and bookings
 - Docker deployment ready
 
 ## Tech Stack
 
-- **Frontend/Backend:** Next.js 14 (App Router) with TypeScript
+- **Frontend:** React 19, Vite, TypeScript, TanStack Router, Tailwind CSS
+- **Backend:** Express, TypeScript, Prisma
 - **Database:** PostgreSQL 15+
-- **ORM:** Prisma
-- **Authentication:** NextAuth.js
-- **Styling:** Tailwind CSS
+- **Auth:** JWT (no NextAuth)
 - **Deployment:** Docker Compose
 
 ## Getting Started
@@ -24,84 +24,113 @@ A full-stack dental directory website built with Next.js 14, PostgreSQL, and Doc
 ### Prerequisites
 
 - Node.js 20+
-- Docker and Docker Compose (for deployment)
 - PostgreSQL (for local development without Docker)
+- Docker and Docker Compose (optional, for deployment)
 
 ### Local Development
 
-1. Clone the repository
-2. Install dependencies:
+1. **Clone the repository**
    ```bash
-   npm install
+   git clone https://github.com/your-username/Turkey-Clinic-Guide.git
+   cd Turkey-Clinic-Guide
    ```
 
-3. Set up environment variables:
+2. **Install dependencies**
+   ```bash
+   npm run install:all
+   ```
+   This installs root, frontend, and backend dependencies.
+
+3. **Environment variables**
    ```bash
    cp .env.example .env
    ```
-   Edit `.env` with your configuration.
+   Edit `.env` and set at least:
+   - `DATABASE_URL` – PostgreSQL connection string
+   - `JWT_SECRET` – e.g. `openssl rand -base64 32`
+   - `FRONTEND_URL` – e.g. `http://localhost:3000`
+   - `VITE_API_URL` – e.g. `http://localhost:3001/api`  
+   See `.env.example` for all options (Google Maps, SMTP, etc.). **Do not commit `.env`.**
 
-4. Set up the database:
+4. **Database**
+   From the project root (Prisma lives here):
    ```bash
-   npx prisma generate
-   npx prisma db push
+   npm run db:generate
+   npm run db:push
    ```
 
-5. Run the development server:
+5. **Run the app**
    ```bash
    npm run dev
    ```
+   - Frontend: [http://localhost:3000](http://localhost:3000)  
+   - Backend API: [http://localhost:3001](http://localhost:3001)
 
-6. Open [http://localhost:3000](http://localhost:3000)
+### Docker
 
-### Docker Deployment
-
-1. Build and start containers:
+1. **Build and start**
    ```bash
    docker-compose -f docker/docker-compose.yml up -d --build
    ```
 
-2. Run database migrations:
-   ```bash
-   docker-compose -f docker/docker-compose.yml exec app npx prisma db push
-   ```
+2. **Database**  
+   Use the same `db:generate` / `db:push` flow as above, or run them inside the backend container. Ensure `DATABASE_URL` and `JWT_SECRET` are set (e.g. in `.env` or in Compose env).
 
-3. Access the application at [http://localhost:3000](http://localhost:3000)
+3. **Access**  
+   App: [http://localhost:3000](http://localhost:3000)
+
+### Deployment (VPS with Docker)
+
+- Clone the repo, copy `.env.example` to `.env`, set `JWT_SECRET`, `DATABASE_URL` (or let Docker set it), and `FRONTEND_URL`/`VITE_API_URL` for production.
+- Build and start: `docker-compose -f docker/docker-compose.yml up -d --build`
+- Initialize DB (run once):  
+  `docker-compose -f docker/docker-compose.yml exec backend npx prisma generate`  
+  `docker-compose -f docker/docker-compose.yml exec backend npx prisma db push`
+- Use a reverse proxy (e.g. Nginx) and SSL (e.g. Let's Encrypt) for production.  
+  Proxy to `http://localhost:3000` (frontend) and `http://localhost:3001` (API) or serve the built frontend statically and proxy only the API.
 
 ### Environment Variables
 
-See `.env.example` for required environment variables:
-- `DATABASE_URL` - PostgreSQL connection string
-- `NEXTAUTH_URL` - Application URL
-- `NEXTAUTH_SECRET` - Secret for NextAuth (generate with `openssl rand -base64 32`)
-- `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` - Google Maps API key (optional)
+| Variable | Description |
+|----------|-------------|
+| `DATABASE_URL` | PostgreSQL connection string |
+| `JWT_SECRET` | **Required.** Secret for JWT (e.g. `openssl rand -base64 32`) |
+| `PORT` | Backend port (default 3001) |
+| `FRONTEND_URL` | Frontend origin (for CORS) |
+| `VITE_API_URL` | API base URL used by the frontend |
+| `VITE_GOOGLE_MAPS_API_KEY` | Optional; for maps on clinic pages |
+| `SMTP_*` / `ADMIN_EMAIL` | Optional; for booking/notification emails |
 
-### Database Management
+See `.env.example` for the full list.
 
-- Generate Prisma client: `npm run db:generate`
-- Push schema changes: `npm run db:push`
-- Run migrations: `npm run db:migrate`
-- Open Prisma Studio: `npm run db:studio`
+### Scripts (from project root)
+
+| Script | Description |
+|--------|-------------|
+| `npm run install:all` | Install deps in root, frontend, and backend |
+| `npm run dev` | Run frontend + backend in dev mode |
+| `npm run build` | Build frontend and backend |
+| `npm run db:generate` | Generate Prisma client |
+| `npm run db:push` | Push schema to DB (no migrations) |
+| `npm run db:migrate` | Run Prisma migrations |
+| `npm run db:studio` | Open Prisma Studio |
 
 ## Project Structure
 
 ```
-turkey-clinic-guide/
-├── prisma/
-│   └── schema.prisma          # Database schema
-├── src/
-│   ├── app/                   # Next.js App Router
-│   │   ├── (public)/          # Public routes
-│   │   ├── admin/             # Admin panel
-│   │   └── api/               # API routes
-│   ├── components/            # React components
-│   ├── lib/                   # Utilities
-│   └── types/                 # TypeScript types
-├── docker/                    # Docker configuration
-└── public/                    # Static assets
+Turkey-Clinic-Guide/
+├── backend/          # Express API, Prisma (client only)
+│   └── src/
+├── frontend/         # Vite + React app
+│   └── src/
+├── prisma/           # Schema and migrations
+│   └── schema.prisma
+├── docker/           # Dockerfile(s), docker-compose
+├── public/           # Static uploads (e.g. clinic images)
+├── .env.example      # Example env (copy to .env, do not commit .env)
+└── package.json      # Root scripts (dev, build, db)
 ```
 
 ## License
 
 MIT
-

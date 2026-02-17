@@ -1,35 +1,34 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# dependencies
-/node_modules
-/.pnp
+# dependencies (match in any subdirectory)
+node_modules/
+.pnp
 .pnp.js
 
 # testing
-/coverage
+coverage/
 
-# build outputs
-/dist/
-/build/
-/out/
-
-# production
-/build
+# build outputs (match in any subdirectory)
+dist/
+build/
+out/
 
 # misc
 .DS_Store
 *.pem
+Thumbs.db
 
 # debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# local env files
+# local env files - never commit real .env
 .env*.local
 .env
+!.env.example
 
-# ingore null values
+# ignore null values (Windows)
 nul
 
 
