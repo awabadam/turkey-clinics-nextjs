@@ -8,7 +8,7 @@ services:
   - type: web
     name: turkey-clinic-guide-api
     runtime: node
-    plan: free
+    plan: starter
     rootDir: backend
     buildCommand: npm install && cd .. && npx prisma generate && cd backend && npm run build
     startCommand: node dist/server.js
@@ -29,7 +29,6 @@ services:
   - type: web
     name: turkey-clinic-guide-web
     runtime: static
-    plan: free
     rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: dist
