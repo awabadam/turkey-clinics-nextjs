@@ -1,0 +1,42 @@
+databases:
+  - name: turkey-clinic-guide-db
+    plan: free
+    databaseName: turkey_clinic_guide
+    user: turkey_clinic_guide_user
+
+services:
+  - type: web
+    name: turkey-clinic-guide-api
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install && cd .. && npx prisma generate && cd backend && npm run build
+    startCommand: node dist/server.js
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: turkey-clinic-guide-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: PORT
+        value: 3001
+      - key: FRONTEND_URL
+        value: https://turkey-clinic-guide-web.onrender.com
+      - key: NODE_ENV
+        value: production
+
+  - type: web
+    name: turkey-clinic-guide-web
+    runtime: static
+    plan: free
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://turkey-clinic-guide-api.onrender.com/api
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
