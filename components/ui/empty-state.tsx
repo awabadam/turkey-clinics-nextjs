@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Link } from "@tanstack/react-router";
+import Link from "next/link";
 
 interface EmptyStateProps {
   icon?: ReactNode;
@@ -24,7 +24,7 @@ export function EmptyState({ icon, title, description, action }: EmptyStateProps
         </p>
         {action && (
           <Button asChild>
-            <Link to={action.href}>{action.label}</Link>
+            <Link href={action.href}>{action.label}</Link>
           </Button>
         )}
       </CardContent>
