@@ -42,3 +42,4 @@ nul
 /public/uploads/*
 !/public/uploads/.gitkeep
 .next/
+.vercel
