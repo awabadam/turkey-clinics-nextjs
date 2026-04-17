@@ -11,7 +11,6 @@ import { useState } from "react"
 import { api } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase/client"
 
 export default function ProfilePage() {
   const { user } = useAuth()
@@ -24,6 +23,7 @@ export default function ProfilePage() {
   const [name, setName] = useState(user?.name || "")
 
   // Password form
+  const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [passwordError, setPasswordError] = useState("")
@@ -70,13 +70,10 @@ export default function ProfilePage() {
     setPasswordLoading(true)
 
     try {
-      const supabase = createClient()
-      const { error } = await supabase.auth.updateUser({ password: newPassword })
-
-      if (error) {
-        setPasswordError(error.message)
-        return
-      }
+      await api.put("/auth/password", {
+        currentPassword,
+        newPassword,
+      })
 
       toast({
         title: "Success",
@@ -84,6 +81,7 @@ export default function ProfilePage() {
       })
 
       // Clear form
+      setCurrentPassword("")
       setNewPassword("")
       setConfirmPassword("")
     } catch (err: any) {
@@ -157,6 +155,18 @@ export default function ProfilePage() {
                     <AlertDescription>{passwordError}</AlertDescription>
                   </Alert>
                 )}
+                <div className="space-y-2">
+                  <Label htmlFor="currentPassword">Current Password</Label>
+                  <Input
+                    id="currentPassword"
+                    name="currentPassword"
+                    type="password"
+                    placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    required
+                  />
+                </div>
                 <div className="space-y-2">
                   <Label htmlFor="newPassword">New Password</Label>
                   <Input

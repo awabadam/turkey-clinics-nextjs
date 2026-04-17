@@ -1,8 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { createClient } from "@/lib/supabase/client"
-import type { User as SupabaseUser } from "@supabase/supabase-js"
 import { api } from "@/lib/api"
 
 interface User {
@@ -14,80 +12,43 @@ interface User {
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null)
-  const [supabaseUser, setSupabaseUser] = useState<SupabaseUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const supabase = createClient()
 
   useEffect(() => {
     const getUser = async () => {
-      const {
-        data: { user: sbUser },
-      } = await supabase.auth.getUser()
-      setSupabaseUser(sbUser)
-
-      if (sbUser) {
-        try {
-          const dbUser = await api.get<User>("/auth/me")
-          setUser(dbUser)
-        } catch {
-          setUser(null)
-        }
+      try {
+        const dbUser = await api.get<User>("/auth/me")
+        setUser(dbUser)
+      } catch {
+        setUser(null)
       }
       setIsLoading(false)
     }
 
     getUser()
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setSupabaseUser(session?.user ?? null)
-      if (session?.user) {
-        try {
-          const dbUser = await api.get<User>("/auth/me")
-          setUser(dbUser)
-        } catch {
-          setUser(null)
-        }
-      } else {
-        setUser(null)
-      }
-    })
-
-    return () => subscription.unsubscribe()
   }, [])
 
   const login = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    const response = await api.post<{ user: User }>("/auth/login", {
       email,
       password,
     })
-    if (error) throw new Error(error.message)
+    setUser(response.user)
   }
 
   const register = async (email: string, password: string, name?: string) => {
-    const { data, error } = await supabase.auth.signUp({
+    const response = await api.post<{ user: User }>("/auth/register", {
       email,
       password,
-      options: {
-        data: { name },
-      },
+      name,
     })
-    if (error) throw new Error(error.message)
-
-    // Sync user to database
-    if (data.user) {
-      await fetch("/api/auth/signup-sync", { method: "POST" })
-    }
-
-    return data
+    setUser(response.user)
   }
 
   const logout = async () => {
-    await supabase.auth.signOut()
+    await api.post("/auth/logout")
     setUser(null)
-    setSupabaseUser(null)
   }
 
-  return { user, supabaseUser, isLoading, login, register, logout }
+  return { user, isLoading, login, register, logout }
 }

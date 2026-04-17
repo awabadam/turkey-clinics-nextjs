@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server"
 import { getAuthUser } from "@/lib/auth"
-import { createClient } from "@supabase/supabase-js"
+import { put } from "@vercel/blob"
 import sharp from "sharp"
 
 export async function POST(request: NextRequest) {
@@ -51,35 +51,15 @@ export async function POST(request: NextRequest) {
 
     const timestamp = Date.now()
     const randomString = Math.random().toString(36).substring(2, 15)
-    const filename = `${timestamp}-${randomString}.webp`
+    const filename = `clinic-images/${timestamp}-${randomString}.webp`
 
-    // Upload to Supabase Storage
-    const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
+    // Upload to Vercel Blob
+    const blob = await put(filename, processed, {
+      access: "public",
+      contentType: "image/webp",
+    })
 
-    const { error: uploadError } = await supabaseAdmin.storage
-      .from("clinic-images")
-      .upload(filename, processed, {
-        contentType: "image/webp",
-        upsert: false,
-      })
-
-    if (uploadError) {
-      return Response.json(
-        { error: uploadError.message },
-        { status: 500 }
-      )
-    }
-
-    const {
-      data: { publicUrl },
-    } = supabaseAdmin.storage
-      .from("clinic-images")
-      .getPublicUrl(filename)
-
-    return Response.json({ url: publicUrl })
+    return Response.json({ url: blob.url })
   } catch (error) {
     console.error("Error uploading file:", error)
     return Response.json(
