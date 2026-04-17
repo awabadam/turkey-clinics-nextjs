@@ -13,7 +13,7 @@ export async function apiRequest<T>(
   const requestBody: BodyInit | null | undefined = isFormData
     ? (body as FormData)
     : body
-      ? JSON.stringify(body as Record<string, unknown>)
+      ? JSON.stringify(body as unknown as Record<string, unknown>)
       : undefined
 
   const response = await fetch(`/api${endpoint}`, {
