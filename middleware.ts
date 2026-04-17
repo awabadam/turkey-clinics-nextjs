@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server"
-import jwt from "jsonwebtoken"
+import { jwtVerify } from "jose"
 
 export async function middleware(request: NextRequest) {
   const token = request.cookies.get("token")?.value
@@ -7,7 +7,8 @@ export async function middleware(request: NextRequest) {
 
   if (token) {
     try {
-      jwt.verify(token, process.env.JWT_SECRET!)
+      const secret = new TextEncoder().encode(process.env.JWT_SECRET!)
+      await jwtVerify(token, secret)
       isAuthenticated = true
     } catch {
       // Invalid token
